@@ -4,7 +4,6 @@ export type Donation = {
   amount: number;
   name: string;
   message?: string;
-  crypto: 'btc' | 'eth' | 'ltc';
   paid: boolean;
   email: string;
 };
@@ -14,15 +13,6 @@ const donationSchema = new Schema({
   name: {type: String, required: true},
   email: {type: String, required: true},
   message: {type: String},
-  crypto: {
-    type: String,
-    required: true,
-    validate: {
-      validator: function(v:string) {
-        return ['btc', 'eth', 'ltc'].includes(v);
-      },
-    },
-  },
   paid: {type: Boolean, default: false},
 });
 

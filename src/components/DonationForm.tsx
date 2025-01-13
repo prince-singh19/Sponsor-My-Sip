@@ -1,12 +1,48 @@
 'use client';
-import { createDonation } from "@/action/donationAction";
 import {faCoffee} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import Script from "next/script";
 import {useEffect, useState} from "react";
 
 export default function DonationForm() {
+  const createOrder = async () => {
+    const res = await fetch("/api/createOrder", {
+      method: "POST",
+      body: JSON.stringify({ amount: amount *5* 100 }),
+    });
+    const data = await res.json();
+
+    const paymentData = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      order_id: data.id,
+
+      handler: async function (response: any) {
+        // verify payment
+        const res = await fetch("/api/verifyOrder", {
+          method: "POST",
+          body: JSON.stringify({
+            orderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          }),
+        });
+        const data = await res.json();
+        console.log(data);
+        if (data.isOk) {
+          // do whatever page transition you want here as payment was successful
+          alert("Payment successful");
+        } else {
+          alert("Payment failed");
+        }
+      },
+    };
+
+    const payment = new (window as any).Razorpay(paymentData);
+    payment.open();
+  };
+
   const [numberInValue, setNumberInValue] = useState('');
-  const [crypto, setCrypto] = useState('btc');
+  
   const [amount, setAmount] = useState(1);
 
   useEffect(() => {
@@ -24,16 +60,9 @@ export default function DonationForm() {
 
   async function handleFormSubmit(formData: FormData) {
     formData.set('amount', amount.toString());
-    formData.set('crypto', crypto);
     formData.set('email', email);
-    const url = await createDonation(formData);
-    if (!url) {
-      return;
-    }
-    if (url && window && window.location) {
-      window.location.href = url;
-    }
   }
+  
 
 
 
@@ -74,35 +103,23 @@ export default function DonationForm() {
         <textarea name="message" id="" placeholder="Say something nice"></textarea>
       </div>
       <div className="mt-2">
-        <h3 className="text-xs text-gray-500 mb-1">Pay with selected crypto or with cc</h3>
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={() => setCrypto('btc')}
-            className={"crypto " + (crypto === 'btc' ? 'active' : '')}>
-            <span>BTC</span>
-            <p>BITCOIN</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => setCrypto('eth')}
-            className={"crypto " + (crypto === 'eth' ? 'active' : '')}>
-            <span>ETH</span>
-            <p>Ethereum</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => setCrypto('ltc')}
-            className={"crypto " + (crypto === 'ltc' ? 'active' : '')}>
-            <span>LTC</span>
-            <p>Litecoin</p>
-          </button>
-        </div>
+        <h3 className="text-xs text-gray-500 mb-1">Pay with selected with cc</h3>
+       
       </div>
       <div className="mt-2">
-        <button className="bg-yellow-300 w-full rounded-xl py-2 font-semibold">
-          Support ${amount * 5}
-        </button>
+      <Script
+        type="text/javascript"
+        src="https://checkout.razorpay.com/v1/checkout.js"
+      />
+        <button
+  className="bg-yellow-300 w-full rounded-xl py-2 font-semibold"
+  onClick={(e) => {
+    e.preventDefault(); // Prevent form submission
+    createOrder(); // Trigger Razorpay payment
+  }}
+>
+  Support ${amount * 5}
+</button>
       </div>
     </form>
   );
