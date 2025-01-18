@@ -40,7 +40,7 @@ export const authoption  = {
                 connectDB()
                 const existUser = await User.findOne({ email: profile?.email })
                 if (!existUser) {
-                    const user = await User.create({
+                    await User.create({
                         email: profile?.email,
                         name: profile?.name,
                         image: profile?.picture

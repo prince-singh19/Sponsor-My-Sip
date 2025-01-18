@@ -4,11 +4,11 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import Script from "next/script";
 import {useEffect, useState} from "react";
 
-export default function DonationForm() {
+export default function DonationForm({ email,toUser }: { email: string,toUser:string}) {
   const createOrder = async () => {
     const res = await fetch("/api/createOrder", {
       method: "POST",
-      body: JSON.stringify({ amount: amount *5* 100 }),
+      body: JSON.stringify({ amount: amount*5*100 ,name,message,toUser,email}),
     });
     const data = await res.json();
 
@@ -44,6 +44,8 @@ export default function DonationForm() {
   const [numberInValue, setNumberInValue] = useState('');
   
   const [amount, setAmount] = useState(1);
+  const [name, setName] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (numberInValue) {
@@ -97,10 +99,10 @@ export default function DonationForm() {
           value={numberInValue} />
       </div>
       <div className="mt-2">
-        <input name="name" type="text" placeholder="Your name"/>
+        <input name="name" type="text" placeholder="Your name" onChange={(e)=>setName(e.target.value)}/>
       </div>
       <div className="mt-2">
-        <textarea name="message" id="" placeholder="Say something nice"></textarea>
+        <textarea name="message" id="" placeholder="Say something nice" onChange={(e)=>setMessage(e.target.value)}></textarea>
       </div>
       <div className="mt-2">
         <h3 className="text-xs text-gray-500 mb-1">Pay with selected with cc</h3>

@@ -7,6 +7,7 @@ import { ChangeEvent, useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencil, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { signOut } from 'next-auth/react';
 
 type Props = {
   profileInfo: ProfileInfo | null;
@@ -65,14 +66,14 @@ export default function ProfileInfoForm({ profileInfo }: Props) {
     formData.append('displayName', displayName);
     formData.append('bio', bio);
 
-    const savePromise = new Promise<void>(async (resolve, reject) => {
+    const savePromise = new Promise<void>(async (resolve) => {
       await saveProfile(formData);
       resolve();
     });
 
     await toast.promise(savePromise, {
       loading: 'Saving...',
-      success: <b>Profile saved!!</b>,
+      success: <b>Profile saved!</b>,
       error: <b>Could not save</b>,
     });
   }
@@ -80,145 +81,141 @@ export default function ProfileInfoForm({ profileInfo }: Props) {
   return (
     <form
       action={handleFormAction}
-      className="max-w-lg mx-auto bg-white p-6 shadow-lg rounded-lg space-y-6"
+      className="max-w-lg mx-auto bg-white p-8 shadow-lg rounded-lg space-y-8"
     >
-      {/* Cover Image with Change Icon */}
-      <div className="relative bg-gray-200 rounded-lg overflow-hidden h-40">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: coverUrl ? `url(${coverUrl})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {!coverUrl && (
-            <span
-              className="absolute inset-0 flex items-center justify-center text-gray-500 cursor-pointer"
-              onClick={() => coverInputRef.current?.click()}
-            >
-              <FontAwesomeIcon icon={faUpload} />
-            </span>
-          )}
-          <input
-            ref={coverInputRef}
-            type="file"
-            className="hidden"
-            onChange={(e) => handleUpload(e, setCoverUrl)}
-          />
-          {coverUrl && (
-            <div
-              className="absolute top-2 right-2 bg-gray-700 bg-opacity-50 text-white p-2 rounded-full cursor-pointer"
-              onClick={() => coverInputRef.current?.click()}
-            >
-              <FontAwesomeIcon icon={faPencil} />
-            </div>
-          )}
+      {/* Cover Image with Avatar */}
+      <div className="relative">
+        <div className="relative bg-gradient-to-r h-40 rounded-lg overflow-hidden">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: coverUrl ? `url(${coverUrl})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {!coverUrl && (
+              <span
+                className="absolute inset-0 flex items-center justify-center text-white cursor-pointer"
+                onClick={() => coverInputRef.current?.click()}
+              >
+                <FontAwesomeIcon icon={faUpload} />
+              </span>
+            )}
+            <input
+              ref={coverInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => handleUpload(e, setCoverUrl)}
+            />
+            {coverUrl && (
+              <div
+                className="absolute top-2 right-2 bg-gray-700 bg-opacity-50 text-white p-2 rounded-full cursor-pointer"
+                onClick={() => coverInputRef.current?.click()}
+              >
+                <FontAwesomeIcon icon={faPencil} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Avatar Image */}
+        <div className="absolute -bottom-12 left-6 w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gray-300">
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundImage: avatarUrl ? `url(${avatarUrl})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {!avatarUrl && (
+              <span
+                className="flex items-center justify-center h-full text-gray-500 cursor-pointer"
+                onClick={() => avatarInputRef.current?.click()}
+              >
+                <FontAwesomeIcon icon={faUpload} />
+              </span>
+            )}
+            <input
+              ref={avatarInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => handleUpload(e, setAvatarUrl)}
+            />
+            {avatarUrl && (
+              <div
+                className="absolute bottom-2 right-2 bg-gray-700 bg-opacity-50 text-white p-2 rounded-full cursor-pointer"
+                onClick={() => avatarInputRef.current?.click()}
+              >
+                <FontAwesomeIcon icon={faPencil} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Avatar with Change Icon */}
-      <div className="relative w-24 h-24 mx-auto bg-gray-300 rounded-full border-4 border-white overflow-hidden">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage: avatarUrl ? `url(${avatarUrl})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {!avatarUrl && (
-            <span
-              className="flex items-center justify-center h-full text-gray-500 cursor-pointer"
-              onClick={() => avatarInputRef.current?.click()}
-            >
-              <FontAwesomeIcon icon={faUpload} />
-            </span>
-          )}
+      {/* Input Fields */}
+      <div className="space-y-6 pt-14">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Username
+          </label>
           <input
-            ref={avatarInputRef}
-            type="file"
-            className="hidden"
-            onChange={(e) => handleUpload(e, setAvatarUrl)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            name="username"
+            type="text"
+            placeholder="Enter your username"
+            className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            required
           />
-          {avatarUrl && (
-            <div
-              className="absolute bottom-2 right-2 bg-gray-700 bg-opacity-50 text-white p-2 rounded-full cursor-pointer"
-              onClick={() => avatarInputRef.current?.click()}
-            >
-              <FontAwesomeIcon icon={faPencil} />
-            </div>
-          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Display Name
+          </label>
+          <input
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            name="displayName"
+            type="text"
+            placeholder="Enter your display name"
+            className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Bio
+          </label>
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            name="bio"
+            placeholder="Write a short bio"
+            className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+          ></textarea>
         </div>
       </div>
 
-      {/* Username Input */}
-      <div className='grid grid-cols-2 gap-2'>
-      <div>
-        <label
-          className="block text-sm font-medium text-gray-700 mb-1"
-          htmlFor="usernameIn"
-        >
-          Username
-        </label>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          name="username"
-          id="usernameIn"
-          type="text"
-          placeholder="Enter your username"
-          className="w-full p-2 border border-gray-300 rounded-lg"
-          required
-        />
-      </div>
-
-      {/* Display Name Input */}
-      <div>
-        <label
-          className="block text-sm font-medium text-gray-700 mb-1"
-          htmlFor="displayNameIn"
-        >
-          Display Name
-        </label>
-        <input
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          name="displayName"
-          id="displayNameIn"
-          type="text"
-          placeholder="Enter your display name"
-          className="w-full p-2 border border-gray-300 rounded-lg"
-        />
-      </div>
-
-      {/* Bio Input */}
-      <div>
-        <label
-          className="block text-sm font-medium text-gray-700 mb-1"
-          htmlFor="bioIn"
-        >
-          Bio
-        </label>
-        <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          name="bio"
-          id="bioIn"
-          placeholder="Write a short bio"
-          className="w-full p-2 border border-gray-300 rounded-lg"
-        ></textarea>
-      </div>
-
-      {/* Save Profile Button */}
-      <div className="text-center">
+      {/* Save and Logout Buttons */}
+      <div className="flex justify-center items-center gap-6">
         <button
           type="submit"
-          className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-6 rounded-lg"
+          className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg focus:outline-none"
         >
           Save Profile
         </button>
-      </div>
+
+        <button
+          type="button"
+          className="bg-gray-200 hover:bg-gray-300 border border-gray-300 text-gray-700 font-medium py-2 px-6 rounded-lg focus:outline-none"
+          onClick={() => signOut()}
+        >
+          Logout
+        </button>
       </div>
     </form>
   );

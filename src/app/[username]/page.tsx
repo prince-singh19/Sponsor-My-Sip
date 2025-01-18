@@ -1,8 +1,9 @@
 'use server';
 import DonationForm from "@/components/DonationForm";
-import {ProfileInfo, ProfileInfoModel} from "@/models/ProfileInfo";
-import {faCoffee} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import { Donation, DonationModel } from "@/models/Donation";
+import { ProfileInfo, ProfileInfoModel } from "@/models/ProfileInfo";
+import { faCoffee } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import mongoose from "mongoose";
 import Image from "next/image";
 
@@ -10,20 +11,25 @@ type Props = {
   params: {
     username: string;
   };
-}
+};
 
-export default async function SingleProfilePage({params}:Props) {
-  const username = params.username;
+export default async function SingleProfilePage({ params }: Props) {
+  const resolvedParams = await params;
+  const { username } = resolvedParams;
+
   await mongoose.connect(process.env.MONGODB_URI as string);
-  const profileInfoDoc:ProfileInfo|null = await ProfileInfoModel.findOne({username});
+  const profileInfoDoc: ProfileInfo | null = await ProfileInfoModel.findOne({ username });
 
   if (!profileInfoDoc) {
-    return (
-      <div>404 - profile not found</div>
-    );
+    return <div>404 - Profile not found</div>;
   }
+
+  // Fetch and optionally sort donations (highest amount or most recent first)
+  const donations: Donation[] = await DonationModel.find({ paid: true, email: profileInfoDoc.email }).sort({ amount: -1 });
+
   return (
     <div>
+      {/* Cover Image */}
       <div className="w-full h-48">
         <Image
           src={profileInfoDoc.coverUrl}
@@ -33,22 +39,22 @@ export default async function SingleProfilePage({params}:Props) {
           className="object-cover object-center h-48"
         />
       </div>
+
       <div className="max-w-2xl px-2 mx-auto relative -mt-16">
+        {/* Avatar and User Info */}
         <div className="flex items-end gap-3">
           <div className="size-36 overflow-hidden rounded-xl border-2 border-white">
             <Image
               src={profileInfoDoc.avatarUrl}
               width={256}
               height={256}
-              alt="cover image"
+              alt="avatar"
               className="size-36 object-cover object-center"
             />
           </div>
           <div className="mb-1">
-            <h1 className="text-4xl font-semibold">
-              {profileInfoDoc.displayName}
-            </h1>
-            <h2 className="flex gap-1 items-center">
+            <h1 className="text-4xl font-semibold">{profileInfoDoc.displayName}</h1>
+            <h2 className="flex gap-1 items-center text-gray-600">
               <FontAwesomeIcon icon={faCoffee} />
               <span>/</span>
               <span>{profileInfoDoc.username}</span>
@@ -56,19 +62,40 @@ export default async function SingleProfilePage({params}:Props) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        {/* Main Content Section */}
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          {/* About and Recent Supporters */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h3 className="font-semibold">About {profileInfoDoc.username}</h3>
-            {profileInfoDoc.bio}
-            <hr className="my-4"/>
-            <h3 className="font-semibold mt-6">Recent supporters:</h3>
-           <p>no recent donations</p>
+            <h3 className="font-semibold text-gray-700 mb-2">About {profileInfoDoc.username}</h3>
+            <p className="text-gray-600">{profileInfoDoc.bio}</p>
+
+            <hr className="my-4" />
+
+            <h3 className="font-semibold text-gray-700 mb-2">Recent Supporters:</h3>
+            {!donations.length ? (
+              <p className="text-gray-500">No recent donations</p>
+            ) : (
+              <div className="mt-2 overflow-y-auto max-h-48 space-y-4">
+                {donations.map((donation) => (
+                  <div key={donation.orderId} className="py-2">
+                    <h3>
+                      <span className="font-semibold">{donation.name}</span>{" "}
+                      <span className="text-gray-500">
+                        bought you {donation.amount > 1 ? donation.amount / 100 + " chai" : "a chai"}
+                      </span>
+                    </h3>
+                    <p className="bg-gray-100 p-2 rounded-md">{donation.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Donation Form */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <DonationForm />
+            <DonationForm email={profileInfoDoc.email} toUser={profileInfoDoc.username} />
           </div>
         </div>
-
       </div>
     </div>
   );
