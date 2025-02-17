@@ -115,7 +115,7 @@ function SearchBar() {
 
       {query && !loading && results.length === 0 && (
         <div className="absolute mt-14 w-full max-w-md bg-white p-4 rounded-lg shadow-md z-50">
-          <p className="text-gray-600 truncate">No results found for "{query}".</p>
+          <p className="text-gray-600 truncate">No results found for {query}.</p>
         </div>
       )}
     </div>

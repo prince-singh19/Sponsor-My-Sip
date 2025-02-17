@@ -16,7 +16,7 @@ export default function DonationForm({ email,toUser }: { email: string,toUser:st
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       order_id: data.id,
 
-      handler: async function (response: any) {
+      handler: async function (response) {
         // verify payment
         const res = await fetch("/api/verifyOrder", {
           method: "POST",
