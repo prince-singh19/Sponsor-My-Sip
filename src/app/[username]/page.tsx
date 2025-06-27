@@ -7,13 +7,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import mongoose from "mongoose";
 import Image from "next/image";
 
-type Props = {
+interface PageProps {
   params: {
     username: string;
   };
-};
+}
 
-export default async function SingleProfilePage({ params }: Props) {
+export default async function SingleProfilePage({ params }: PageProps) {
   const { username } = params;
 
   await mongoose.connect(process.env.MONGODB_URI as string);
@@ -23,12 +23,13 @@ export default async function SingleProfilePage({ params }: Props) {
     return <div>404 - Profile not found</div>;
   }
 
-  // Fetch and optionally sort donations (highest amount or most recent first)
-  const donations: Donation[] = await DonationModel.find({ paid: true, email: profileInfoDoc.email }).sort({ amount: -1 });
+  const donations: Donation[] = await DonationModel.find({
+    paid: true,
+    email: profileInfoDoc.email,
+  }).sort({ amount: -1 });
 
   return (
     <div>
-      {/* Cover Image */}
       <div className="w-full h-48">
         <Image
           src={profileInfoDoc.coverUrl}
@@ -40,7 +41,6 @@ export default async function SingleProfilePage({ params }: Props) {
       </div>
 
       <div className="max-w-2xl px-2 mx-auto relative -mt-16">
-        {/* Avatar and User Info */}
         <div className="flex items-end gap-3">
           <div className="size-36 overflow-hidden rounded-xl border-2 border-white">
             <Image
@@ -61,9 +61,7 @@ export default async function SingleProfilePage({ params }: Props) {
           </div>
         </div>
 
-        {/* Main Content Section */}
         <div className="grid grid-cols-2 gap-4 mt-6">
-          {/* About and Recent Supporters */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <h3 className="font-semibold text-gray-700 mb-2">About {profileInfoDoc.username}</h3>
             <p className="text-gray-600">{profileInfoDoc.bio}</p>
@@ -90,7 +88,6 @@ export default async function SingleProfilePage({ params }: Props) {
             )}
           </div>
 
-          {/* Donation Form */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <DonationForm email={profileInfoDoc.email} toUser={profileInfoDoc.username} />
           </div>
