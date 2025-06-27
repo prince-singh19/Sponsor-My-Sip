@@ -14,8 +14,7 @@ type Props = {
 };
 
 export default async function SingleProfilePage({ params }: Props) {
-  const resolvedParams = await params;
-  const { username } = resolvedParams;
+  const { username } = params;
 
   await mongoose.connect(process.env.MONGODB_URI as string);
   const profileInfoDoc: ProfileInfo | null = await ProfileInfoModel.findOne({ username });
