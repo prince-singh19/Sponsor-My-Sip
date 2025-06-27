@@ -3,9 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      'lh3.googleusercontent.com', // Google OAuth images or any required domain
-      'yeuuwurfoghsyouyvnut.supabase.co', // Supabase domain for your images
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'yeuuwurfoghsyouyvnut.supabase.co',
+      },
     ],
   },
 };
